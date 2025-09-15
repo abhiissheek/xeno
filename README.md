@@ -35,14 +35,6 @@ This project is a submission for the Xeno SDE Internship Assignment 2025. It is 
 
 ---
 
-## Architecture Diagram
-
-*(To create this diagram, you can use a free tool like [Eraser.io](https://eraser.io) or [Excalidraw](https://excalidraw.com). Export the diagram as a PNG, add it to your repository, and update the image link below.)*
-
-![Architecture Diagram](path/to/your/architecture-diagram.png)
-
----
-
 ## Local Setup Instructions
 
 ### Prerequisites
