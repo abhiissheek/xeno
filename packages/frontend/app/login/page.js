@@ -1,64 +1,18 @@
-// "use client";
-
-// import { useGoogleLogin } from '@react-oauth/google';
-// import { useRouter } from 'next/navigation';
-
-// export default function LoginPage() {
-//   const router = useRouter();
-
-//   const login = useGoogleLogin({
-//     onSuccess: async (codeResponse) => {
-//       try {
-//         const res = await fetch('http://localhost:3001/auth/google', {
-//           method: 'POST',
-//           headers: { 'Content-Type': 'application/json' },
-//           body: JSON.stringify({ code: codeResponse.code }),
-//         });
-//         if (res.ok) {
-//           router.push('/campaigns');
-//         } else {
-//           console.error("Backend login failed");
-//           alert("Login failed. The server could not authenticate you.");
-//         }
-//       } catch (error) {
-//         console.error("An error occurred during the login process:", error);
-//         alert("An error occurred. Please try again later.");
-//       }
-//     },
-//     flow: 'auth-code',
-//     onError: () => {
-//         console.error('Google login failed');
-//         alert('Google login failed. Please try again.');
-//     }
-//   });
-
-//   return (
-//     <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}>
-//       <div style={{ textAlign: 'center' }}>
-//         <h1 style={{ marginBottom: '2rem' }}>Login to Xeno CRM</h1>
-//         <button 
-//           onClick={() => login()} 
-//           style={{ padding: '12px 24px', fontSize: '18px', cursor: 'pointer', border: '1px solid #ccc', borderRadius: '4px' }}
-//         >
-//           Sign in with Google 🚀
-//         </button>
-//       </div>
-//     </div>
-//   );
-// }
-
-
-
 "use client";
 
 import { useGoogleLogin } from '@react-oauth/google';
 import { useRouter } from 'next/navigation';
+import { useState } from 'react';
 
 export default function LoginPage() {
   const router = useRouter();
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState('');
 
   const login = useGoogleLogin({
     onSuccess: async (codeResponse) => {
+      setIsLoading(true);
+      setError('');
       try {
         const res = await fetch('http://localhost:3001/auth/google', {
           method: 'POST',
@@ -66,59 +20,100 @@ export default function LoginPage() {
           body: JSON.stringify({ code: codeResponse.code }),
           credentials: 'include'
         });
+        
         if (res.ok) {
           router.push('/campaigns');
         } else {
-          console.error("Backend login failed");
-          alert("Login failed. The server could not authenticate you.");
+          const errorData = await res.json();
+          setError(errorData.message || 'Login failed. Please try again.');
         }
       } catch (error) {
-        console.error("An error occurred during the login process:", error);
-        alert("An error occurred. Please try again later.");
+        console.error("Login error:", error);
+        setError('Network error. Please check your connection and try again.');
+      } finally {
+        setIsLoading(false);
       }
     },
     flow: 'auth-code',
-    onError: () => {
-        console.error('Google login failed');
-        alert('Google login failed. Please try again.');
+    onError: (error) => {
+      console.error('Google login failed:', error);
+      setError('Google authentication failed. Please try again.');
     }
   });
 
-  const handlePseudoLogin = async () => {
-    try {
-      const res = await fetch('http://localhost:3001/auth/pseudo-login', {
-        credentials: 'include' // Crucial to save the session cookie
-      });
-      if (res.ok) {
-        router.push('/campaigns'); // Redirect on success
-      } else {
-        alert("Pseudo-login failed on the server.");
-      }
-    } catch (error) {
-      console.error("Pseudo-login error:", error);
-      alert("Could not connect to the server for pseudo-login.");
-    }
-  };
-
   return (
-    <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}>
-      <div style={{ textAlign: 'center' }}>
-        <h1 style={{ marginBottom: '2rem' }}>Login to Xeno CRM</h1>
+    <div style={{ 
+      display: 'flex', 
+      justifyContent: 'center', 
+      alignItems: 'center', 
+      height: '100vh',
+      backgroundColor: '#f5f5f5'
+    }}>
+      <div style={{ 
+        textAlign: 'center',
+        backgroundColor: 'white',
+        padding: '3rem',
+        borderRadius: '8px',
+        boxShadow: '0 2px 10px rgba(0,0,0,0.1)',
+        maxWidth: '400px',
+        width: '100%'
+      }}>
+        <h1 style={{ 
+          marginBottom: '2rem',
+          color: '#333',
+          fontSize: '2rem',
+          fontWeight: 'bold'
+        }}>
+          Welcome to Xeno CRM
+        </h1>
+        
+        <p style={{ 
+          marginBottom: '2rem',
+          color: '#666',
+          fontSize: '1rem'
+        }}>
+          Please sign in with your Google account to continue
+        </p>
+
+        {error && (
+          <div style={{
+            backgroundColor: '#fee',
+            color: '#c33',
+            padding: '1rem',
+            borderRadius: '4px',
+            marginBottom: '1rem',
+            border: '1px solid #fcc'
+          }}>
+            {error}
+          </div>
+        )}
+        
         <button 
           onClick={() => login()} 
-          style={{ padding: '12px 24px', fontSize: '18px', cursor: 'pointer', border: '1px solid #ccc', borderRadius: '4px' }}
+          disabled={isLoading}
+          style={{ 
+            padding: '12px 24px', 
+            fontSize: '18px', 
+            cursor: isLoading ? 'not-allowed' : 'pointer', 
+            border: '1px solid #4285f4', 
+            borderRadius: '4px',
+            backgroundColor: '#4285f4',
+            color: 'white',
+            width: '100%',
+            opacity: isLoading ? 0.7 : 1,
+            transition: 'all 0.2s ease'
+          }}
         >
-          Sign in with Google 🚀
+          {isLoading ? 'Signing in...' : 'Sign in with Google 🚀'}
         </button>
 
-        <div style={{ marginTop: '20px' }}>
-          <button 
-            onClick={handlePseudoLogin}
-            style={{ padding: '8px 16px', cursor: 'pointer' }}
-          >
-            Dev Login (Bypass Google)
-          </button>
-        </div>
+        <p style={{ 
+          marginTop: '1.5rem',
+          fontSize: '0.875rem',
+          color: '#888'
+        }}>
+          By signing in, you agree to our terms of service and privacy policy.
+        </p>
       </div>
     </div>
   );

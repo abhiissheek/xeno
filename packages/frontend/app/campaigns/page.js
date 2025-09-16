@@ -7,18 +7,35 @@ export default function CampaignsHistory() {
     const [campaigns, setCampaigns] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
+    const [user, setUser] = useState(null);
     const router = useRouter();
 
     useEffect(() => {
-        async function fetchCampaigns() {
+        async function checkAuthAndFetchCampaigns() {
             try {
-                const response = await fetch('http://localhost:3001/campaigns', {
-                    credentials: 'include' 
+                // Check authentication status first
+                const authResponse = await fetch('http://localhost:3001/auth/status', {
+                    credentials: 'include'
                 });
+                const authData = await authResponse.json();
+                
+                if (!authData.authenticated) {
+                    router.push('/login');
+                    return;
+                }
+                
+                setUser(authData.user);
+                
+                // Fetch campaigns
+                const response = await fetch('http://localhost:3001/campaigns', {
+                    credentials: 'include'
+                });
+                
                 if (response.status === 401) {
                     router.push('/login');
                     return;
                 }
+                
                 const data = await response.json();
                 if (response.ok) {
                     setCampaigns(data);
@@ -32,15 +49,46 @@ export default function CampaignsHistory() {
                 setLoading(false);
             }
         }
-        fetchCampaigns();
+        checkAuthAndFetchCampaigns();
     }, [router]);
+
+    const handleLogout = async () => {
+        try {
+            await fetch('http://localhost:3001/auth/logout', {
+                method: 'POST',
+                credentials: 'include'
+            });
+            router.push('/login');
+        } catch (error) {
+            console.error('Logout error:', error);
+            // Force redirect even if logout request fails
+            router.push('/login');
+        }
 
     if (loading) return <p style={{ padding: '2rem' }}>Loading campaigns...</p>;
     if (error) return <p style={{ padding: '2rem', color: 'red' }}>Error: {error}</p>;
 
     return (
         <div style={{ padding: '2rem' }}>
-            <h1 style={{ fontSize: '2rem', marginBottom: '2rem' }}>Campaign History</h1>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
+                <div>
+                    <h1 style={{ fontSize: '2rem', margin: 0 }}>Campaign History</h1>
+                    {user && <p style={{ color: '#666', margin: '0.5rem 0 0 0' }}>Welcome, {user.name}</p>}
+                </div>
+                <button 
+                    onClick={handleLogout}
+                    style={{ 
+                        padding: '8px 16px', 
+                        backgroundColor: '#dc3545', 
+                        color: 'white', 
+                        border: 'none', 
+                        borderRadius: '4px',
+                        cursor: 'pointer'
+                    }}
+                >
+                    Logout
+                </button>
+            </div>
             <button onClick={() => router.push('/campaigns/new')} style={{ marginBottom: '1rem', padding: '10px', cursor: 'pointer' }}>+ New Campaign</button>
             <table style={{ width: '100%', borderCollapse: 'collapse' }}>
                 <thead>
