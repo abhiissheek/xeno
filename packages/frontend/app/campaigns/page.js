@@ -64,6 +64,7 @@ export default function CampaignsHistory() {
             // Force redirect even if logout request fails
             router.push('/login');
         }
+    }
 
     if (loading) return <p style={{ padding: '2rem' }}>Loading campaigns...</p>;
     if (error) return <p style={{ padding: '2rem', color: 'red' }}>Error: {error}</p>;
@@ -74,6 +75,7 @@ export default function CampaignsHistory() {
                 <div>
                     <h1 style={{ fontSize: '2rem', margin: 0 }}>Campaign History</h1>
                     {user && <p style={{ color: '#666', margin: '0.5rem 0 0 0' }}>Welcome, {user.name}</p>}
+                    }
                 </div>
                 <button 
                     onClick={handleLogout}
