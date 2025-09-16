@@ -1,26 +1,13 @@
 {
   "name": "frontend",
-  "version": "0.1.0",
-  "private": true,
+  "version": "1.0.0",
+  "description": "Xeno CRM Frontend",
+  "main": "index.html",
   "scripts": {
-    "dev": "next dev --turbopack",
-    "build": "next build --turbopack",
-    "start": "next start",
-    "lint": "eslint"
+    "dev": "python3 -m http.server 3000",
+    "start": "python3 -m http.server 3000"
   },
-  "dependencies": {
-    "@react-oauth/google": "^0.12.2",
-    "lodash.debounce": "^4.0.8",
-    "next": "15.5.3",
-    "react": "19.1.0",
-    "react-dom": "19.1.0",
-    "react-hook-form": "^7.62.0"
-  },
-  "devDependencies": {
-    "@eslint/eslintrc": "^3",
-    "@tailwindcss/postcss": "^4",
-    "eslint": "^9",
-    "eslint-config-next": "15.5.3",
-    "tailwindcss": "^4"
-  }
+  "keywords": ["crm", "frontend", "html"],
+  "author": "",
+  "license": "ISC"
 }

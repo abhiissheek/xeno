@@ -1,0 +1,784 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Xeno CRM Platform</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://accounts.google.com/gsi/client" async defer></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        
+        .shadow-custom {
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+        }
+        
+        .shadow-card {
+            box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
+        }
+        
+        .transition-all {
+            transition: all 0.2s ease-in-out;
+        }
+        
+        .hover-lift:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px -5px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+        }
+        
+        .fade-in {
+            animation: fadeIn 0.3s ease-in-out;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .loading {
+            opacity: 0.7;
+            pointer-events: none;
+        }
+
+        .error-message {
+            background-color: #fee;
+            color: #c33;
+            padding: 1rem;
+            border-radius: 8px;
+            margin-bottom: 1rem;
+            border: 1px solid #fcc;
+        }
+
+        .success-message {
+            background-color: #efe;
+            color: #363;
+            padding: 1rem;
+            border-radius: 8px;
+            margin-bottom: 1rem;
+            border: 1px solid #cfc;
+        }
+    </style>
+</head>
+<body class="bg-white text-black min-h-screen">
+    <!-- Login Page -->
+    <div id="login-page" class="min-h-screen flex items-center justify-center px-4">
+        <div class="max-w-md w-full space-y-8 text-center">
+            <div class="fade-in">
+                <h1 class="text-4xl font-bold mb-2">Welcome to Xeno CRM</h1>
+                <p class="text-lg text-gray-600 mb-12">Streamline your customer relationships with elegance</p>
+                
+                <div class="bg-white border border-gray-200 rounded-xl p-8 shadow-card">
+                    <div id="login-error" class="hidden error-message"></div>
+                    
+                    <button id="google-login-btn" class="w-full bg-black text-white py-4 px-6 rounded-xl font-medium hover:bg-gray-800 transition-all flex items-center justify-center space-x-3">
+                        <svg class="w-5 h-5" viewBox="0 0 24 24" fill="currentColor">
+                            <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+                            <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+                            <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
+                            <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
+                        </svg>
+                        <span id="login-btn-text">Continue with Google</span>
+                    </button>
+                    
+                    <p class="text-sm text-gray-500 mt-6">
+                        By continuing, you agree to our Terms of Service and Privacy Policy
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Dashboard -->
+    <div id="dashboard-page" class="hidden">
+        <!-- Top Navigation -->
+        <nav class="bg-white border-b border-gray-200 px-6 py-4">
+            <div class="flex items-center justify-between">
+                <div class="flex items-center space-x-8">
+                    <h1 class="text-2xl font-bold">Xeno CRM</h1>
+                </div>
+                <div class="flex items-center space-x-4">
+                    <span id="user-name" class="text-sm text-gray-600"></span>
+                    <button id="logout-btn" class="text-sm text-gray-600 hover:text-black transition-all">Logout</button>
+                    <div class="w-8 h-8 bg-black rounded-full flex items-center justify-center">
+                        <span id="user-initials" class="text-white text-sm font-medium"></span>
+                    </div>
+                </div>
+            </div>
+        </nav>
+
+        <div class="flex">
+            <!-- Sidebar -->
+            <div class="w-64 bg-white border-r border-gray-200 min-h-screen p-6">
+                <nav class="space-y-2">
+                    <button class="nav-item w-full text-left px-4 py-3 rounded-xl bg-black text-white font-medium" data-page="dashboard">
+                        Dashboard
+                    </button>
+                    <button class="nav-item w-full text-left px-4 py-3 rounded-xl hover:bg-gray-50 transition-all" data-page="campaigns">
+                        Campaigns
+                    </button>
+                    <button class="nav-item w-full text-left px-4 py-3 rounded-xl hover:bg-gray-50 transition-all" data-page="contacts">
+                        Contacts
+                    </button>
+                    <button class="nav-item w-full text-left px-4 py-3 rounded-xl hover:bg-gray-50 transition-all" data-page="analytics">
+                        Analytics
+                    </button>
+                </nav>
+            </div>
+
+            <!-- Main Content -->
+            <div class="flex-1 p-8">
+                <div class="max-w-6xl mx-auto">
+                    <div class="mb-8">
+                        <h2 class="text-3xl font-bold mb-2">Dashboard</h2>
+                        <p class="text-gray-600">Overview of your CRM performance</p>
+                    </div>
+
+                    <!-- Stats Grid -->
+                    <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+                        <div class="bg-white border border-gray-200 rounded-xl p-6 shadow-card hover-lift transition-all">
+                            <h3 class="text-sm font-medium text-gray-600 mb-2">Total Contacts</h3>
+                            <p class="text-3xl font-bold" id="total-contacts">Loading...</p>
+                        </div>
+                        <div class="bg-white border border-gray-200 rounded-xl p-6 shadow-card hover-lift transition-all">
+                            <h3 class="text-sm font-medium text-gray-600 mb-2">Active Campaigns</h3>
+                            <p class="text-3xl font-bold" id="active-campaigns">Loading...</p>
+                        </div>
+                        <div class="bg-white border border-gray-200 rounded-xl p-6 shadow-card hover-lift transition-all">
+                            <h3 class="text-sm font-medium text-gray-600 mb-2">Success Rate</h3>
+                            <p class="text-3xl font-bold" id="success-rate">Loading...</p>
+                        </div>
+                        <div class="bg-white border border-gray-200 rounded-xl p-6 shadow-card hover-lift transition-all">
+                            <h3 class="text-sm font-medium text-gray-600 mb-2">Total Sent</h3>
+                            <p class="text-3xl font-bold" id="total-sent">Loading...</p>
+                        </div>
+                    </div>
+
+                    <!-- Quick Actions -->
+                    <div class="bg-white border border-gray-200 rounded-xl p-6 shadow-card">
+                        <h3 class="text-xl font-semibold mb-6">Quick Actions</h3>
+                        <div class="flex space-x-4">
+                            <button id="create-campaign-btn" class="bg-black text-white px-6 py-3 rounded-xl font-medium hover:bg-gray-800 transition-all">
+                                Create Campaign
+                            </button>
+                            <button id="view-campaigns-btn" class="bg-white border border-black text-black px-6 py-3 rounded-xl font-medium hover:bg-gray-50 transition-all">
+                                View Campaigns
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Campaign Creation Page -->
+    <div id="campaign-page" class="hidden">
+        <!-- Top Navigation -->
+        <nav class="bg-white border-b border-gray-200 px-6 py-4">
+            <div class="flex items-center justify-between">
+                <div class="flex items-center space-x-8">
+                    <button id="back-to-dashboard" class="text-gray-600 hover:text-black transition-all">
+                        ← Back
+                    </button>
+                    <h1 class="text-2xl font-bold">Create Campaign</h1>
+                </div>
+            </div>
+        </nav>
+
+        <div class="p-8">
+            <div class="max-w-7xl mx-auto">
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                    <!-- Campaign Builder -->
+                    <div class="lg:col-span-2 space-y-6">
+                        <!-- AI-Powered Natural Language Query -->
+                        <div class="bg-white border border-gray-200 rounded-xl p-6 shadow-card">
+                            <h3 class="text-xl font-semibold mb-4">🤖 AI-Powered Segment Builder</h3>
+                            <p class="text-sm text-gray-600 mb-4">
+                                Describe your target audience in plain English (e.g., "users who spent more than 1000 and visited more than 5 times")
+                            </p>
+                            <div class="flex gap-3">
+                                <input 
+                                    type="text" 
+                                    id="ai-query-input"
+                                    class="flex-1 px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-black" 
+                                    placeholder="Describe your target audience..."
+                                >
+                                <button 
+                                    id="generate-rules-btn"
+                                    class="bg-black text-white px-6 py-3 rounded-xl font-medium hover:bg-gray-800 transition-all"
+                                >
+                                    <span id="generate-btn-text">Generate Rules</span>
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Campaign Details -->
+                        <div class="bg-white border border-gray-200 rounded-xl p-6 shadow-card">
+                            <h3 class="text-xl font-semibold mb-4">Campaign Details</h3>
+                            <div class="space-y-4">
+                                <div>
+                                    <label class="block text-sm font-medium mb-2">Campaign Name</label>
+                                    <input 
+                                        type="text" 
+                                        id="campaign-name"
+                                        class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-black" 
+                                        placeholder="Enter campaign name"
+                                        required
+                                    >
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Rule Builder -->
+                        <div class="bg-white border border-gray-200 rounded-xl p-6 shadow-card">
+                            <div class="flex items-center justify-between mb-4">
+                                <h3 class="text-xl font-semibold">Audience Rules</h3>
+                                <button id="add-rule-btn" class="bg-black text-white px-4 py-2 rounded-xl text-sm font-medium hover:bg-gray-800 transition-all">
+                                    Add Rule
+                                </button>
+                            </div>
+                            
+                            <div id="rules-container" class="space-y-4">
+                                <!-- Initial rule will be added by JavaScript -->
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Preview Panel -->
+                    <div class="space-y-6">
+                        <div class="bg-white border border-gray-200 rounded-xl p-6 shadow-card sticky top-8">
+                            <h3 class="text-xl font-semibold mb-4">Audience Preview</h3>
+                            <div class="text-center py-8">
+                                <div class="text-4xl font-bold mb-2" id="audience-size">0</div>
+                                <p class="text-gray-600 mb-6">contacts match your criteria</p>
+                                
+                                <div class="space-y-3 text-sm text-gray-600">
+                                    <div class="flex justify-between">
+                                        <span>Estimated reach:</span>
+                                        <span class="font-medium" id="estimated-reach">0</span>
+                                    </div>
+                                    <div class="flex justify-between">
+                                        <span>Expected opens (24%):</span>
+                                        <span class="font-medium" id="expected-opens">0</span>
+                                    </div>
+                                    <div class="flex justify-between">
+                                        <span>Expected clicks (3%):</span>
+                                        <span class="font-medium" id="expected-clicks">0</span>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="space-y-3">
+                                <button id="launch-campaign-btn" class="w-full bg-black text-white py-3 px-4 rounded-xl font-medium hover:bg-gray-800 transition-all">
+                                    <span id="launch-btn-text">Save & Launch Campaign</span>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Campaign History Page -->
+    <div id="history-page" class="hidden">
+        <!-- Top Navigation -->
+        <nav class="bg-white border-b border-gray-200 px-6 py-4">
+            <div class="flex items-center justify-between">
+                <div class="flex items-center space-x-8">
+                    <button id="back-to-dashboard-2" class="text-gray-600 hover:text-black transition-all">
+                        ← Back
+                    </button>
+                    <h1 class="text-2xl font-bold">Campaign History</h1>
+                </div>
+                <button id="new-campaign-btn" class="bg-black text-white px-6 py-3 rounded-xl font-medium hover:bg-gray-800 transition-all">
+                    New Campaign
+                </button>
+            </div>
+        </nav>
+
+        <div class="p-8">
+            <div class="max-w-7xl mx-auto">
+                <!-- Campaigns Table -->
+                <div class="bg-white border border-gray-200 rounded-xl shadow-card overflow-hidden">
+                    <div class="px-6 py-4 border-b border-gray-200">
+                        <h3 class="text-lg font-semibold">All Campaigns</h3>
+                    </div>
+                    
+                    <div class="overflow-x-auto">
+                        <table class="w-full">
+                            <thead class="bg-gray-50">
+                                <tr>
+                                    <th class="px-6 py-4 text-left text-sm font-medium text-gray-600">Campaign Name</th>
+                                    <th class="px-6 py-4 text-left text-sm font-medium text-gray-600">Audience Size</th>
+                                    <th class="px-6 py-4 text-left text-sm font-medium text-gray-600">Sent</th>
+                                    <th class="px-6 py-4 text-left text-sm font-medium text-gray-600">Failed</th>
+                                    <th class="px-6 py-4 text-left text-sm font-medium text-gray-600">Date</th>
+                                </tr>
+                            </thead>
+                            <tbody id="campaigns-table-body" class="divide-y divide-gray-200">
+                                <!-- Campaigns will be loaded here -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Configuration
+        const API_BASE_URL = 'http://localhost:3001';
+        let currentUser = null;
+        let currentRules = [];
+
+        // Utility functions
+        function showError(elementId, message) {
+            const errorEl = document.getElementById(elementId);
+            errorEl.textContent = message;
+            errorEl.classList.remove('hidden');
+        }
+
+        function hideError(elementId) {
+            const errorEl = document.getElementById(elementId);
+            errorEl.classList.add('hidden');
+        }
+
+        function setLoading(elementId, isLoading, loadingText = 'Loading...') {
+            const element = document.getElementById(elementId);
+            if (isLoading) {
+                element.classList.add('loading');
+                if (element.tagName === 'BUTTON') {
+                    element.disabled = true;
+                    element.querySelector('span').textContent = loadingText;
+                }
+            } else {
+                element.classList.remove('loading');
+                if (element.tagName === 'BUTTON') {
+                    element.disabled = false;
+                }
+            }
+        }
+
+        function getUserInitials(name) {
+            return name.split(' ').map(n => n[0]).join('').toUpperCase().substring(0, 2);
+        }
+
+        // Page navigation
+        function showPage(pageId) {
+            const pages = ['login-page', 'dashboard-page', 'campaign-page', 'history-page'];
+            pages.forEach(id => {
+                document.getElementById(id).classList.add('hidden');
+            });
+            document.getElementById(pageId).classList.remove('hidden');
+            document.getElementById(pageId).classList.add('fade-in');
+        }
+
+        // Authentication functions
+        async function checkAuthStatus() {
+            try {
+                const response = await fetch(`${API_BASE_URL}/auth/status`, {
+                    credentials: 'include'
+                });
+                const data = await response.json();
+                
+                if (data.authenticated) {
+                    currentUser = data.user;
+                    updateUserInfo();
+                    showPage('dashboard-page');
+                    loadDashboardData();
+                } else {
+                    showPage('login-page');
+                }
+            } catch (error) {
+                console.error('Auth check failed:', error);
+                showPage('login-page');
+            }
+        }
+
+        function updateUserInfo() {
+            if (currentUser) {
+                document.getElementById('user-name').textContent = `Welcome, ${currentUser.name}`;
+                document.getElementById('user-initials').textContent = getUserInitials(currentUser.name);
+            }
+        }
+
+        async function handleGoogleLogin() {
+            // This would integrate with Google OAuth
+            // For now, we'll show an error message since the real OAuth needs proper setup
+            showError('login-error', 'Google OAuth integration requires proper setup with client credentials. Please check the backend configuration.');
+        }
+
+        async function handleLogout() {
+            try {
+                await fetch(`${API_BASE_URL}/auth/logout`, {
+                    method: 'POST',
+                    credentials: 'include'
+                });
+                currentUser = null;
+                showPage('login-page');
+            } catch (error) {
+                console.error('Logout failed:', error);
+                // Force logout even if request fails
+                currentUser = null;
+                showPage('login-page');
+            }
+        }
+
+        // Dashboard functions
+        async function loadDashboardData() {
+            try {
+                const response = await fetch(`${API_BASE_URL}/campaigns`, {
+                    credentials: 'include'
+                });
+                
+                if (response.status === 401) {
+                    showPage('login-page');
+                    return;
+                }
+                
+                const campaigns = await response.json();
+                updateDashboardStats(campaigns);
+            } catch (error) {
+                console.error('Failed to load dashboard data:', error);
+                // Set default values
+                document.getElementById('total-contacts').textContent = '0';
+                document.getElementById('active-campaigns').textContent = '0';
+                document.getElementById('success-rate').textContent = '0%';
+                document.getElementById('total-sent').textContent = '0';
+            }
+        }
+
+        function updateDashboardStats(campaigns) {
+            const totalCampaigns = campaigns.length;
+            const totalSent = campaigns.reduce((sum, c) => sum + (c.sent_count || 0), 0);
+            const totalFailed = campaigns.reduce((sum, c) => sum + (c.failed_count || 0), 0);
+            const totalAudience = campaigns.reduce((sum, c) => sum + (c.audience_size || 0), 0);
+            const successRate = totalSent + totalFailed > 0 ? ((totalSent / (totalSent + totalFailed)) * 100).toFixed(1) : 0;
+
+            document.getElementById('total-contacts').textContent = totalAudience.toLocaleString();
+            document.getElementById('active-campaigns').textContent = totalCampaigns.toString();
+            document.getElementById('success-rate').textContent = `${successRate}%`;
+            document.getElementById('total-sent').textContent = totalSent.toLocaleString();
+        }
+
+        // Campaign functions
+        function addRule(field = 'total_spends', condition = '>', value = '') {
+            const rulesContainer = document.getElementById('rules-container');
+            const ruleIndex = rulesContainer.children.length;
+            
+            const ruleDiv = document.createElement('div');
+            ruleDiv.className = 'rule-card bg-gray-50 border border-gray-200 rounded-xl p-4 fade-in';
+            ruleDiv.innerHTML = `
+                <div class="flex items-center justify-between mb-3">
+                    <span class="text-sm font-medium text-gray-600">Rule ${ruleIndex + 1}</span>
+                    <button class="delete-rule text-gray-400 hover:text-black transition-all" onclick="removeRule(this)">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                        </svg>
+                    </button>
+                </div>
+                <div class="grid grid-cols-3 gap-3">
+                    <select class="rule-field px-3 py-2 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-black" onchange="updateAudienceSize()">
+                        <option value="total_spends" ${field === 'total_spends' ? 'selected' : ''}>Total Spends</option>
+                        <option value="visit_count" ${field === 'visit_count' ? 'selected' : ''}>Visit Count</option>
+                        <option value="last_visit_date" ${field === 'last_visit_date' ? 'selected' : ''}>Last Visit (days ago)</option>
+                    </select>
+                    <select class="rule-condition px-3 py-2 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-black" onchange="updateAudienceSize()">
+                        <option value=">" ${condition === '>' ? 'selected' : ''}>&gt;</option>
+                        <option value="<" ${condition === '<' ? 'selected' : ''}>&lt;</option>
+                        <option value="=" ${condition === '=' ? 'selected' : ''}>=</option>
+                    </select>
+                    <input type="number" class="rule-value px-3 py-2 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-black" placeholder="Value" value="${value}" oninput="updateAudienceSize()" required>
+                </div>
+            `;
+            
+            rulesContainer.appendChild(ruleDiv);
+            updateAudienceSize();
+        }
+
+        function removeRule(button) {
+            button.closest('.rule-card').remove();
+            updateAudienceSize();
+        }
+
+        function getCurrentRules() {
+            const rules = [];
+            document.querySelectorAll('.rule-card').forEach(card => {
+                const field = card.querySelector('.rule-field').value;
+                const condition = card.querySelector('.rule-condition').value;
+                const value = card.querySelector('.rule-value').value;
+                
+                if (value !== '') {
+                    rules.push({ field, condition, value: parseFloat(value) });
+                }
+            });
+            return rules;
+        }
+
+        async function updateAudienceSize() {
+            const rules = getCurrentRules();
+            currentRules = rules;
+            
+            if (rules.length === 0) {
+                document.getElementById('audience-size').textContent = '0';
+                document.getElementById('estimated-reach').textContent = '0';
+                document.getElementById('expected-opens').textContent = '0';
+                document.getElementById('expected-clicks').textContent = '0';
+                return;
+            }
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/segments/preview`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ rules }),
+                    credentials: 'include'
+                });
+
+                if (response.status === 401) {
+                    showPage('login-page');
+                    return;
+                }
+
+                const data = await response.json();
+                if (response.ok) {
+                    const size = data.audienceSize;
+                    const opens = Math.floor(size * 0.24);
+                    const clicks = Math.floor(size * 0.03);
+                    
+                    document.getElementById('audience-size').textContent = size.toLocaleString();
+                    document.getElementById('estimated-reach').textContent = size.toLocaleString();
+                    document.getElementById('expected-opens').textContent = opens.toLocaleString();
+                    document.getElementById('expected-clicks').textContent = clicks.toLocaleString();
+                }
+            } catch (error) {
+                console.error('Error fetching audience size:', error);
+            }
+        }
+
+        async function handleAIQuery() {
+            const query = document.getElementById('ai-query-input').value.trim();
+            if (!query) return;
+
+            setLoading('generate-rules-btn', true, 'Processing...');
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/segments/parse-natural-language`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ query }),
+                    credentials: 'include'
+                });
+
+                if (response.status === 401) {
+                    showPage('login-page');
+                    return;
+                }
+
+                const data = await response.json();
+                if (response.ok && data.rules) {
+                    // Clear existing rules
+                    document.getElementById('rules-container').innerHTML = '';
+                    
+                    // Add new rules
+                    data.rules.forEach(rule => {
+                        addRule(rule.field, rule.condition, rule.value);
+                    });
+                    
+                    document.getElementById('ai-query-input').value = '';
+                } else {
+                    alert('Failed to parse your query. Please try rephrasing it.');
+                }
+            } catch (error) {
+                console.error('AI parsing error:', error);
+                alert('Error processing your query. Please try again.');
+            } finally {
+                setLoading('generate-rules-btn', false);
+                document.getElementById('generate-btn-text').textContent = 'Generate Rules';
+            }
+        }
+
+        async function launchCampaign() {
+            const campaignName = document.getElementById('campaign-name').value.trim();
+            const rules = getCurrentRules();
+
+            if (!campaignName) {
+                alert('Please enter a campaign name.');
+                return;
+            }
+
+            if (rules.length === 0) {
+                alert('Please add at least one rule.');
+                return;
+            }
+
+            setLoading('launch-campaign-btn', true, 'Creating Campaign...');
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/campaigns`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ campaignName, rules }),
+                    credentials: 'include'
+                });
+
+                if (response.status === 401) {
+                    showPage('login-page');
+                    return;
+                }
+
+                const result = await response.json();
+                if (response.ok) {
+                    alert(`Campaign created successfully! Audience size: ${result.audienceSize}`);
+                    showPage('history-page');
+                    loadCampaigns();
+                } else {
+                    alert(`Error: ${result.message || 'Failed to create campaign'}`);
+                }
+            } catch (error) {
+                console.error('Campaign creation error:', error);
+                alert('An error occurred while creating the campaign.');
+            } finally {
+                setLoading('launch-campaign-btn', false);
+                document.getElementById('launch-btn-text').textContent = 'Save & Launch Campaign';
+            }
+        }
+
+        async function loadCampaigns() {
+            try {
+                const response = await fetch(`${API_BASE_URL}/campaigns`, {
+                    credentials: 'include'
+                });
+
+                if (response.status === 401) {
+                    showPage('login-page');
+                    return;
+                }
+
+                const campaigns = await response.json();
+                displayCampaigns(campaigns);
+            } catch (error) {
+                console.error('Failed to load campaigns:', error);
+            }
+        }
+
+        function displayCampaigns(campaigns) {
+            const tbody = document.getElementById('campaigns-table-body');
+            tbody.innerHTML = '';
+
+            if (campaigns.length === 0) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="5" class="px-6 py-8 text-center text-gray-500">
+                            No campaigns found. <button onclick="showPage('campaign-page')" class="text-black underline">Create your first campaign</button>
+                        </td>
+                    </tr>
+                `;
+                return;
+            }
+
+            campaigns.forEach(campaign => {
+                const row = document.createElement('tr');
+                row.className = 'hover:bg-gray-50 transition-all';
+                row.innerHTML = `
+                    <td class="px-6 py-4">
+                        <div class="font-medium">${campaign.name}</div>
+                        <div class="text-sm text-gray-600">Campaign ID: ${campaign.id}</div>
+                    </td>
+                    <td class="px-6 py-4 text-sm">${campaign.audience_size || 0}</td>
+                    <td class="px-6 py-4 text-sm">${campaign.sent_count || 0}</td>
+                    <td class="px-6 py-4 text-sm">${campaign.failed_count || 0}</td>
+                    <td class="px-6 py-4 text-sm">${new Date(campaign.created_at).toLocaleDateString()}</td>
+                `;
+                tbody.appendChild(row);
+            });
+        }
+
+        // Event listeners
+        document.addEventListener('DOMContentLoaded', function() {
+            // Check authentication status on page load
+            checkAuthStatus();
+
+            // Login
+            document.getElementById('google-login-btn').addEventListener('click', handleGoogleLogin);
+
+            // Logout
+            document.getElementById('logout-btn').addEventListener('click', handleLogout);
+
+            // Navigation
+            document.getElementById('create-campaign-btn').addEventListener('click', () => {
+                showPage('campaign-page');
+                // Add initial rule
+                if (document.getElementById('rules-container').children.length === 0) {
+                    addRule();
+                }
+            });
+
+            document.getElementById('view-campaigns-btn').addEventListener('click', () => {
+                showPage('history-page');
+                loadCampaigns();
+            });
+
+            document.getElementById('back-to-dashboard').addEventListener('click', () => {
+                showPage('dashboard-page');
+                loadDashboardData();
+            });
+
+            document.getElementById('back-to-dashboard-2').addEventListener('click', () => {
+                showPage('dashboard-page');
+                loadDashboardData();
+            });
+
+            document.getElementById('new-campaign-btn').addEventListener('click', () => {
+                showPage('campaign-page');
+                // Reset form
+                document.getElementById('campaign-name').value = '';
+                document.getElementById('ai-query-input').value = '';
+                document.getElementById('rules-container').innerHTML = '';
+                addRule();
+            });
+
+            // Campaign creation
+            document.getElementById('add-rule-btn').addEventListener('click', () => addRule());
+            document.getElementById('generate-rules-btn').addEventListener('click', handleAIQuery);
+            document.getElementById('launch-campaign-btn').addEventListener('click', launchCampaign);
+
+            // AI query on Enter key
+            document.getElementById('ai-query-input').addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') {
+                    handleAIQuery();
+                }
+            });
+
+            // Sidebar navigation
+            document.querySelectorAll('.nav-item').forEach(item => {
+                item.addEventListener('click', (e) => {
+                    const page = e.target.dataset.page;
+                    
+                    // Update active state
+                    document.querySelectorAll('.nav-item').forEach(nav => {
+                        nav.classList.remove('bg-black', 'text-white');
+                        nav.classList.add('hover:bg-gray-50');
+                    });
+                    
+                    e.target.classList.add('bg-black', 'text-white');
+                    e.target.classList.remove('hover:bg-gray-50');
+
+                    // Handle navigation
+                    if (page === 'campaigns') {
+                        showPage('history-page');
+                        loadCampaigns();
+                    } else if (page === 'dashboard') {
+                        showPage('dashboard-page');
+                        loadDashboardData();
+                    }
+                    // Add other page handlers as needed
+                });
+            });
+        });
+    </script>
+</body>
+</html>
